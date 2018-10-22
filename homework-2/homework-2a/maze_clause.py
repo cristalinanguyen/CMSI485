@@ -1,3 +1,4 @@
+# AUTHORS: CRISTALINA NGUYEN, AMELIA JAY
 '''
 maze_clause.py
 
