@@ -33,7 +33,6 @@ class MazeKnowledgeBase:
         # Where p is the proposition and v is the truth value assigned
         for p, v in query.props.items():
             clausez.add(MazeClause([(p, not v)]))
-
         while True:
             for each_pair in list(itertools.combinations(clausez, 2)):
                 resolved = MazeClause.resolve(each_pair[0], each_pair[1])

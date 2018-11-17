@@ -7,7 +7,7 @@ from queue import Queue
 MOVE_DIRS = {"U": (0, 1), "D": (0, -1), "L": (-1, 0), "R": (1, 0)}
 
 class MazeAgent:
-    
+
     def __init__ (self, env):
         self.env = env
         self.malmo = env.malmo
@@ -17,7 +17,7 @@ class MazeAgent:
         self.plan = Queue()
         # [!] TODO: Initialize any other knowledge-related attributes for
         # agent here
-    
+
     # [!] TODO! Agent currently just runs straight up
     def think(self, perception):
         """
@@ -30,8 +30,9 @@ class MazeAgent:
         # Agent simply plans to move forward at the moment
         # Do something that thinks about the perception!
         self.plan.put("U")
-    
-    
+
+
+
     # [!] TODO: Any record-keeping when bot dies
     def die(self):
         """
@@ -42,7 +43,7 @@ class MazeAgent:
         """
         # Reset player position back to start
         self.loc = self.env.player_pos
-    
+
     def act(self):
         """
         Called at each of the environment's ticks, the act method gives the
@@ -59,11 +60,11 @@ class MazeAgent:
             return
         self.move(self.plan.get())
         return
-    
+
     # -----------------------------------------------------------------------
     # YOU MAY NOT MODIFY ANYTHING BELOW THIS LINE
     # -----------------------------------------------------------------------
-    
+
     def move(self, dir):
         """
         Instructs the Malmo agent to move one tile (discretely, shh) in the
@@ -72,17 +73,17 @@ class MazeAgent:
         move_dir = MOVE_DIRS[dir]
         face_dir = tuple(numpy.subtract(self.facing, move_dir))
         turnVal = -0.5
-        
+
         if (abs(face_dir[0]) == 2 or abs(face_dir[1]) == 2):
             turnVal = 1
         else:
             turnVal = turnVal * face_dir[0] * face_dir[1]
-        
+
         self.facing = move_dir
         self.loc = self.loc + move_dir
         self.malmo.sendCommand("turn " + str(turnVal))
         self.malmo.sendCommand("move 1")
-    
+
     def perceive(self):
         """
         Receives the currently stood-upon tile type from the environment, and
@@ -97,4 +98,3 @@ class MazeAgent:
         # If we're standing on a goal, huzzah! We win!
         self.env.goal_test(standingOn)
         return standingOn
-    
