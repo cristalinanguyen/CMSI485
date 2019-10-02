@@ -25,22 +25,9 @@ class AdEngine:
         self.dec_vars = dec_vars
         self.util_map = util_map
 
-        state_names = ["P","A","G","I","T","F","H","S","Ad1","Ad2"]
-
-        P = State(P, name = "P")
-        A = State(A, name = "A")
-        G = State(G, name = "G")
-        I = State(I, name = "I")
-        T = State(T, name = "T")
-        F = State(F, name = "F")
-        H = State(H, name = "H")
-        S = State(S, name = "S")
-        Ad1 = State(Ad1, name = "Ad1")
-        Ad2 = State(Ad2, name = "Ad2")
-
-        X = numpy.genfromtxt('hw3_data.csv', delimiter = ',')
-        model = BayesianNetwork.from_structure(X, structure, state_names)
-        model.add_states(P, A, G, I, T, F, H, S, Ad1, Ad2)
+        X = numpy.genfromtxt(data_file, delimiter = ',', names = True, dtype = int)
+        state_names = X.dtype.names
+        self.model = BayesianNetwork.from_structure(X = X.view((int, len(state_names))), structure = structure, state_names = state_names)
 
     def decide(self, evidence):
         """
@@ -54,16 +41,39 @@ class AdEngine:
         :return: dict of format: {"DecVar1": val1, "DecVar2": val2, ...}
         """
         best_combo, best_util = None, -math.inf
+        print(self.model.predict_proba(evidence))
+        self.model.predict_proba(evidence)
         return best_combo
 
+# EU(Ad1, Ad2 | evidence) = sum over all s in S: P(S = s | evidence, Ad1, Ad2) * U(S = s)
+# Need to find:
+# 1. EU(Ad1 = 0, Ad2 = 0 | evidence)
+# 2. EU(Ad1 = 0, Ad2 = 1 | evidence)
+# 3. EU(Ad1 = 1, Ad2 = 0 | evidence)
+# 4. EU(Ad1 = 1, Ad2 = 1 | evidence)
+#
+# 1: EU(Ad1 = 0, Ad2 = 0 | evidence) = P(S = 0 | evidence, Ad1 = 0, Ad2 = 0)*(0) + P(S = 1 | evidence, Ad1 = 0, Ad2 = 0)*(5000) + P(S = 2 | evidence, Ad1 = 0, Ad2 = 0)*(17760)
+#
+# --> go through the dec_vars for all the combinations we have to calculate (using itertools!)
+# --> go through the util_map for each value: S = util_map[0] U(S = 0) = util_map[0] value?? idk how dictionaries work
+# --> put each of the EUs into a dictionary or map and then return the combo that is max (best_combo)
+# --> what does predict_proba return? Returns the probabilities of each variable in the graph given evidence.
+#     - how do we get those probs?
+#     - need to print what it returns
 
 class AdEngineTests(unittest.TestCase):
+
     def test_defendotron_ad_engine_t1(self):
         engine = AdEngine(
             data_file = 'hw3_data.csv',
             dec_vars = ["Ad1", "Ad2"],
-            structure = ((),(),("Ad1", "P"),("G","F"),("Ad2","A"),(),("P","A"),(),("A"),("H")),
-            util_map = {"S": {0: 0, 1: 5000, 2: 17760}}
+            structure = ((),(),(8, 0),(2,5),(9,1),(),(0,1),(),(1,),(6,)),
+            util_map = {"S": {
+                              0: 0,
+                              1: 5000,
+                              2: 17760
+                              }
+                        }
         )
         self.assertEqual(engine.decide({"T": 1}), {"Ad1": 0, "Ad2": 1})
         self.assertIn(engine.decide({"F": 1}), [{"Ad1": 1, "Ad2": 0},{"Ad1": 1, "Ad2": 1}])
@@ -72,14 +82,14 @@ class AdEngineTests(unittest.TestCase):
     def test_defendotron_ad_engine_t2(self):
         engine = AdEngine(
             data_file = 'hw3_data.csv',
-            # [!] Note: in this example, say we are only deciding upon the ad
-            # video (Ad1); our engine's results should adapt accordingly (see
-            # tests below)
             dec_vars = ["Ad1"],
-            structure = ((),(),("Ad1", "P"),("G","F"),("Ad2","A"),(),("P","A"),(),("A"),("H")),
-            # TODO: Decide what the utility map should be for the Defendotron
-            # example; see format of util_map in spec and above!
-            util_map = {"S": {0: 0, 1: 5000, 2: 17760}}
+            structure = ((),(),(8, 0),(2,5),(9,1),(),(0,1),(),(1,),(6,)),
+            util_map = {"S": {
+                              0: 0,
+                              1: 5000,
+                              2: 17760
+                              }
+                        }
         )
         self.assertEqual(engine.decide({"A": 1}), {"Ad1": 0})
         self.assertEqual(engine.decide({"P": 1, "A": 0}), {"Ad1": 1})
